@@ -10,10 +10,10 @@
 #include "narc.h"
 #include "sprite.h"
 
-typedef struct {
+typedef struct EasyChatCategoriesContext {
     UnkStruct_ov20_021D2128 *unk_00;
     const EasyChatApp *easyChatApp;
-    const EasyChatWordList *unk_08;
+    const EasyChatWordList *wordList;
     BgConfig *bgConfig;
     u32 unk_10;
     u32 unk_14;
@@ -26,8 +26,8 @@ typedef struct {
 EasyChatCategoriesContext *EasyChatCategoriesContext_New(UnkStruct_ov20_021D2128 *param0, const EasyChatApp *easyChatApp, const EasyChatWordList *param2);
 void EasyChatCategoriesContext_Free(EasyChatCategoriesContext *ctx);
 void EasyChatCategories_DrawInterface(EasyChatCategoriesContext *ctx, NARC *narc);
-void ov20_021D3E48(EasyChatCategoriesContext *ctx, BOOL param1);
-void EasyChatCategories_DrawCursor(EasyChatCategoriesContext *ctx, u32 selectedIndex);
+void EasyChatCategories_SetCursorDrawFlag(EasyChatCategoriesContext *ctx, BOOL param1);
+void EasyChatCategories_SetCursorPosition(EasyChatCategoriesContext *ctx, u32 selectedIndex);
 void ov20_021D3EF8(EasyChatCategoriesContext *ctx);
 BOOL ov20_021D3F10(EasyChatCategoriesContext *ctx);
 void ov20_021D3F60(EasyChatCategoriesContext *ctx);

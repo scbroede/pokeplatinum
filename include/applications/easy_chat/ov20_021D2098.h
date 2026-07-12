@@ -51,6 +51,6 @@ u32 ov20_021D2DF4(UnkStruct_ov20_021D2128 *param0);
 BgConfig *ov20_021D2E04(UnkStruct_ov20_021D2128 *param0);
 SpriteList *ov20_021D2E08(UnkStruct_ov20_021D2128 *param0);
 void ov20_021D2E0C(UnkStruct_ov20_021D2128 *param0, SpriteResourcesHeader *param1, u32 param2, u32 param3);
-Sprite *ov20_021D2E50(UnkStruct_ov20_021D2128 *param0, SpriteResourcesHeader *param1, u32 param2, u32 param3, u32 param4, int param5);
+Sprite *ov20_021D2E50(UnkStruct_ov20_021D2128 *param0, SpriteResourcesHeader *param1, u32 x, u32 y, u32 priority, enum NNS_G2D_VRAM_TYPE vramType);
 
 #endif // POKEPLATINUM_OV20_021D2098_H

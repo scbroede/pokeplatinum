@@ -18,209 +18,195 @@
 #include "string_gf.h"
 #include "text.h"
 
-typedef struct UnkStruct_ov20_021D4210_t {
+typedef struct EasyChatWordMenu_t {
     UnkStruct_ov20_021D2128 *unk_00;
-    const EasyChatApp *unk_04;
-    const EasyChatWordList *unk_08;
-    BgConfig *unk_0C;
+    const EasyChatApp *app;
+    const EasyChatWordList *unusedWordList;
+    BgConfig *bgConfig;
     Window unk_10;
     Window unk_20;
-    Sprite *unk_30;
-    Sprite *unk_34;
-    Sprite *unk_38;
-    String *unk_3C;
+    Sprite *cursorSprite;
+    Sprite *upArrowSprite;
+    Sprite *downArrowSprite;
+    String *string;
     UnkStruct_ov20_021D4FF0 unk_40;
     UnkStruct_ov20_021D4E8C unk_60;
     u32 unk_80;
-    GXWndPlane unk_84;
-    int unk_88;
+    GXWndPlane plane;
+    int visibleWindow;
     int unk_8C;
     int unk_90;
-} UnkStruct_ov20_021D4210;
+} EasyChatWordMenu;
 
-static void ov20_021D4210(UnkStruct_ov20_021D4210 *param0);
-static void ov20_021D45AC(UnkStruct_ov20_021D4210 *param0, int param1);
-static void ov20_021D4638(UnkStruct_ov20_021D4210 *param0);
-static void ov20_021D4658(UnkStruct_ov20_021D4210 *param0, u32 param1, u32 param2);
+static void ov20_021D4210(EasyChatWordMenu *menu);
+static void ov20_021D45AC(EasyChatWordMenu *menu, int param1);
+static void ov20_021D4638(EasyChatWordMenu *menu);
+static void EasyChatWordMenu_PrintWord(EasyChatWordMenu *menu, u32 param1, u32 param2);
 
-UnkStruct_ov20_021D4210 *ov20_021D40E8(UnkStruct_ov20_021D2128 *param0, const EasyChatApp *param1, const EasyChatWordList *param2)
+EasyChatWordMenu *EasyChatWordMenu_New(UnkStruct_ov20_021D2128 *param0, const EasyChatApp *app, const EasyChatWordList *wordList)
 {
-    UnkStruct_ov20_021D4210 *v0 = Heap_Alloc(HEAP_ID_35, sizeof(UnkStruct_ov20_021D4210));
+    EasyChatWordMenu *menu = Heap_Alloc(HEAP_ID_35, sizeof(EasyChatWordMenu));
 
-    v0->unk_00 = param0;
-    v0->unk_04 = param1;
-    v0->unk_08 = param2;
-    v0->unk_0C = ov20_021D2E04(param0);
-    v0->unk_3C = String_Init(32, HEAP_ID_35);
+    menu->unk_00 = param0;
+    menu->app = app;
+    menu->unusedWordList = wordList;
+    menu->bgConfig = ov20_021D2E04(param0);
+    menu->string = String_Init(32, HEAP_ID_35);
 
-    Window_Add(v0->unk_0C, &v0->unk_10, 2, 4, 0, 26, 32, 12, 1);
-    Window_Add(v0->unk_0C, &v0->unk_20, 2, 0, 0, 12, 4, 12, 1);
+    Window_Add(menu->bgConfig, &menu->unk_10, BG_LAYER_MAIN_2, 4, 0, 26, 32, 12, 1);
+    Window_Add(menu->bgConfig, &menu->unk_20, BG_LAYER_MAIN_2, 0, 0, 12, 4, 12, 1);
 
-    v0->unk_30 = NULL;
-    v0->unk_34 = NULL;
-    v0->unk_38 = NULL;
+    menu->cursorSprite = NULL;
+    menu->upArrowSprite = NULL;
+    menu->downArrowSprite = NULL;
 
-    return v0;
+    return menu;
 }
 
-void ov20_021D4164(UnkStruct_ov20_021D4210 *param0)
+void EasyChatWordMenu_Free(EasyChatWordMenu *menu)
 {
-    if (param0->unk_30) {
-        Sprite_Delete(param0->unk_30);
+    if (menu->cursorSprite) {
+        Sprite_Delete(menu->cursorSprite);
     }
 
-    if (param0->unk_34) {
-        Sprite_Delete(param0->unk_34);
+    if (menu->upArrowSprite) {
+        Sprite_Delete(menu->upArrowSprite);
     }
 
-    if (param0->unk_38) {
-        Sprite_Delete(param0->unk_38);
+    if (menu->downArrowSprite) {
+        Sprite_Delete(menu->downArrowSprite);
     }
 
-    if (param0->unk_3C) {
-        String_Free(param0->unk_3C);
+    if (menu->string) {
+        String_Free(menu->string);
     }
 
-    Window_Remove(&(param0->unk_20));
-    Window_Remove(&(param0->unk_10));
-    Heap_Free(param0);
+    Window_Remove(&menu->unk_20);
+    Window_Remove(&menu->unk_10);
+    Heap_Free(menu);
 }
 
-void ov20_021D41A8(UnkStruct_ov20_021D4210 *param0)
+void ov20_021D41A8(EasyChatWordMenu *menu)
 {
-    BgConfig *v0;
-    u32 v1;
+    BgConfig *bgConfig = ov20_021D2E04(menu->unk_00);
 
-    v0 = ov20_021D2E04(param0->unk_00);
+    Bg_ClearTilesRange(BG_LAYER_MAIN_2, TILE_SIZE_4BPP, 0, HEAP_ID_35);
+    Bg_FillTilemapRect(bgConfig, BG_LAYER_MAIN_2, 0, 0, 0, 32, 32, 12);
 
-    Bg_ClearTilesRange(BG_LAYER_MAIN_2, 0x20, 0 * 0x20, HEAP_ID_35);
-    Bg_FillTilemapRect(v0, 2, 0, 0, 0, 32, 32, 12);
+    Window_FillTilemap(&menu->unk_10, 0);
+    Window_PutToTilemap(&menu->unk_10);
+    Window_LoadTiles(&menu->unk_10);
+    Bg_CopyTilemapBufferToVRAM(bgConfig, BG_LAYER_MAIN_2);
 
-    Window_FillTilemap(&param0->unk_10, 0);
-    Window_PutToTilemap(&param0->unk_10);
-    Window_LoadTiles(&param0->unk_10);
-    Bg_CopyTilemapBufferToVRAM(v0, 2);
+    ov20_021D4210(menu);
 
-    ov20_021D4210(param0);
-
-    Bg_ToggleLayer(BG_LAYER_MAIN_2, 0);
+    Bg_ToggleLayer(BG_LAYER_MAIN_2, FALSE);
 }
 
-static void ov20_021D4210(UnkStruct_ov20_021D4210 *param0)
+static void ov20_021D4210(EasyChatWordMenu *menu)
 {
     SpriteResourcesHeader v0;
+    ov20_021D2E0C(menu->unk_00, &v0, 0, 2);
 
-    ov20_021D2E0C(param0->unk_00, &v0, 0, 2);
-    param0->unk_30 = ov20_021D2E50(param0->unk_00, &v0, 72, 56, 3, NNS_G2D_VRAM_TYPE_2DMAIN);
+    menu->cursorSprite = ov20_021D2E50(menu->unk_00, &v0, 72, 56, 3, NNS_G2D_VRAM_TYPE_2DMAIN);
+    Sprite_SetAnim(menu->cursorSprite, 8);
+    Sprite_SetDrawFlag(menu->cursorSprite, FALSE);
 
-    Sprite_SetAnim(param0->unk_30, 8);
-    Sprite_SetDrawFlag(param0->unk_30, FALSE);
+    menu->upArrowSprite = ov20_021D2E50(menu->unk_00, &v0, 240, 64, 4, NNS_G2D_VRAM_TYPE_2DMAIN);
+    Sprite_SetAnim(menu->upArrowSprite, 11);
+    Sprite_SetDrawFlag(menu->upArrowSprite, FALSE);
 
-    param0->unk_34 = ov20_021D2E50(param0->unk_00, &v0, 240, 64, 4, NNS_G2D_VRAM_TYPE_2DMAIN);
-    Sprite_SetAnim(param0->unk_34, 11);
-    Sprite_SetDrawFlag(param0->unk_34, FALSE);
-
-    param0->unk_38 = ov20_021D2E50(param0->unk_00, &v0, 240, 144, 4, NNS_G2D_VRAM_TYPE_2DMAIN);
-    Sprite_SetAnim(param0->unk_38, 10);
-    Sprite_SetDrawFlag(param0->unk_38, FALSE);
+    menu->downArrowSprite = ov20_021D2E50(menu->unk_00, &v0, 240, 144, 4, NNS_G2D_VRAM_TYPE_2DMAIN);
+    Sprite_SetAnim(menu->downArrowSprite, 10);
+    Sprite_SetDrawFlag(menu->downArrowSprite, FALSE);
 }
 
-void ov20_021D4294(UnkStruct_ov20_021D4210 *param0)
+void ov20_021D4294(EasyChatWordMenu *menu)
 {
-    u32 v0, v1, v2;
+    Window_FillTilemap(&menu->unk_10, 0);
+    ov20_021D4638(menu);
 
-    Window_FillTilemap(&param0->unk_10, 0);
-    ov20_021D4638(param0);
+    u32 wordCount = EasyChat_GetCurrentCategoryWordCount(menu->app);
 
-    v0 = ov20_021D1FE4(param0->unk_04);
-
-    if (v0 > 10) {
-        v0 = 10;
+    if (wordCount > 10) {
+        wordCount = 10;
     }
 
-    v1 = param0->unk_8C;
+    u32 v1 = menu->unk_8C;
 
-    for (v2 = 0; v2 < v0; v2++) {
-        ov20_021D4658(param0, v2, v1);
+    for (u32 i = 0; i < wordCount; i++) {
+        EasyChatWordMenu_PrintWord(menu, i, v1);
 
-        if (v2 & 1) {
+        if (i & 1) {
             v1 += 24;
         }
     }
 
-    Window_LoadTiles(&param0->unk_10);
+    Window_LoadTiles(&menu->unk_10);
 }
 
-void ov20_021D42E4(UnkStruct_ov20_021D4210 *param0)
+void ov20_021D42E4(EasyChatWordMenu *menu)
 {
     G2_SetBlendAlpha(GX_BLEND_PLANEMASK_BG2, GX_BLEND_ALL, 0, 16);
-    Bg_ToggleLayer(BG_LAYER_MAIN_2, 1);
-    G2_SetWnd1InsidePlane(GX_WND_PLANEMASK_ALL, 1);
+    Bg_ToggleLayer(BG_LAYER_MAIN_2, TRUE);
+    G2_SetWnd1InsidePlane(GX_WND_PLANEMASK_ALL, TRUE);
 
-    param0->unk_84 = G2_GetWndOutsidePlane();
-    param0->unk_88 = GX_GetVisibleWnd();
+    menu->plane = G2_GetWndOutsidePlane();
+    menu->visibleWindow = GX_GetVisibleWnd();
 
-    G2_SetWndOutsidePlane(GX_WND_PLANEMASK_ALL ^ GX_WND_PLANEMASK_BG2, 1);
+    G2_SetWndOutsidePlane(GX_WND_PLANEMASK_ALL ^ GX_WND_PLANEMASK_BG2, TRUE);
     G2_SetWnd1Position(0, 46, 255, 176);
     GX_SetVisibleWnd(GX_WNDMASK_W1);
 
-    param0->unk_80 = 0;
-    ov20_021D4F1C(&param0->unk_40, GX_BLEND_PLANEMASK_BG2, GX_BLEND_ALL, 0, 124, (6 * 2));
+    menu->unk_80 = 0;
+    ov20_021D4F1C(&menu->unk_40, GX_BLEND_PLANEMASK_BG2, GX_BLEND_ALL, 0, 124, 6 * 2);
 }
 
-BOOL ov20_021D4390(UnkStruct_ov20_021D4210 *param0)
+BOOL ov20_021D4390(EasyChatWordMenu *menu)
 {
-    switch (param0->unk_80) {
-    case 0:
-        if (ov20_021D4F4C(&param0->unk_40)) {
-            return 1;
-        }
-        break;
-    default:
-        return 1;
-    }
-
-    return 0;
-}
-
-void ov20_021D43B4(UnkStruct_ov20_021D4210 *param0)
-{
-    param0->unk_80 = 0;
-    ov20_021D4F1C(&param0->unk_40, GX_BLEND_PLANEMASK_BG2, GX_BLEND_ALL, 124, 0, (6 * 2));
-}
-
-BOOL ov20_021D43D8(UnkStruct_ov20_021D4210 *param0)
-{
-    switch (param0->unk_80) {
-    case 0:
-        if (ov20_021D4F4C(&param0->unk_40)) {
-            Bg_ToggleLayer(BG_LAYER_MAIN_2, 0);
-            G2_SetWndOutsidePlane(param0->unk_84.planeMask, param0->unk_84.effect);
-            GX_SetVisibleWnd(param0->unk_88);
-            return 1;
-        }
-        break;
-    default:
-        return 1;
-    }
-
-    return 0;
-}
-
-void ov20_021D4440(UnkStruct_ov20_021D4210 *param0, BOOL param1)
-{
-    Sprite_SetDrawFlag(param0->unk_30, param1);
-
-    if (param1) {
-        Sprite_SetDrawFlag(param0->unk_34, ov20_021D204C(param0->unk_04));
-        Sprite_SetDrawFlag(param0->unk_38, ov20_021D2060(param0->unk_04));
+    if (menu->unk_80 == 0) {
+        return !!ov20_021D4F4C(&menu->unk_40);
     } else {
-        Sprite_SetDrawFlag(param0->unk_34, FALSE);
-        Sprite_SetDrawFlag(param0->unk_38, FALSE);
+        return TRUE;
+    }    
+}
+
+void ov20_021D43B4(EasyChatWordMenu *menu)
+{
+    menu->unk_80 = 0;
+    ov20_021D4F1C(&menu->unk_40, GX_BLEND_PLANEMASK_BG2, GX_BLEND_ALL, 124, 0, (6 * 2));
+}
+
+BOOL ov20_021D43D8(EasyChatWordMenu *menu)
+{
+    if (menu->unk_80 == 0) {
+        if (ov20_021D4F4C(&menu->unk_40)) {
+            Bg_ToggleLayer(BG_LAYER_MAIN_2, FALSE);
+            G2_SetWndOutsidePlane(menu->plane.planeMask, menu->plane.effect);
+            GX_SetVisibleWnd(menu->visibleWindow);
+            return TRUE;
+        }
+    } else {
+        return TRUE;
+    }
+
+    return FALSE;
+}
+
+void EasyChatWordMenu_SetSpriteDrawFlags(EasyChatWordMenu *menu, BOOL draw)
+{
+    Sprite_SetDrawFlag(menu->cursorSprite, draw);
+
+    if (draw) {
+        Sprite_SetDrawFlag(menu->upArrowSprite, EasyChat_CanScrollWordPickerUp(menu->app));
+        Sprite_SetDrawFlag(menu->downArrowSprite, EasyChat_CanScrollWordPickerDown(menu->app));
+    } else {
+        Sprite_SetDrawFlag(menu->upArrowSprite, FALSE);
+        Sprite_SetDrawFlag(menu->downArrowSprite, FALSE);
     }
 }
 
-void ov20_021D4480(UnkStruct_ov20_021D4210 *param0, u32 param1)
+void ov20_021D4480(EasyChatWordMenu *menu, u32 param1)
 {
     VecFx32 v0;
     u32 v1 = param1 & 1;
@@ -230,18 +216,21 @@ void ov20_021D4480(UnkStruct_ov20_021D4210 *param0, u32 param1)
     v0.y = (56 + 24 * v2) * FX32_ONE;
     v0.z = 0;
 
-    Sprite_SetPosition(param0->unk_30, &v0);
-    Sprite_SetAnim(param0->unk_30, 8);
+    Sprite_SetPosition(menu->cursorSprite, &v0);
+    Sprite_SetAnim(menu->cursorSprite, 8);
 }
 
-void ov20_021D44BC(UnkStruct_ov20_021D4210 *param0, int param1)
+void ov20_021D44BC(EasyChatWordMenu *menu, int param1)
 {
-    int v0, v1, v2, v3, v4, v5, v6;
+    int v0;
 
-    ov20_021D45AC(param0, param1);
+    ov20_021D45AC(menu, param1);
 
-    v1 = param0->unk_90 + (param1 * 2);
-    v0 = (param0->unk_8C + (param1 * 24)) & 255;
+    int v1 = menu->unk_90 + (param1 * 2);
+    v0 = (menu->unk_8C + (param1 * 24)) & 255;
+
+    int v2;
+    int v3, v4, v5, v6;
 
     if (param1 < 0) {
         v3 = v0;
@@ -249,11 +238,11 @@ void ov20_021D44BC(UnkStruct_ov20_021D4210 *param0, int param1)
         v5 = -(param1 * 2);
         v6 = -(4 * param1);
     } else {
-        v3 = (param0->unk_8C + 120) & 255;
-        v4 = param0->unk_90 + 10;
+        v3 = (menu->unk_8C + 120) & 255;
+        v4 = menu->unk_90 + 10;
         v5 = param1 * 2;
 
-        if ((v5 + v4) > ov20_021D1FE4(param0->unk_04)) {
+        if ((v5 + v4) > EasyChat_GetCurrentCategoryWordCount(menu->app)) {
             v5--;
         }
 
@@ -261,71 +250,71 @@ void ov20_021D44BC(UnkStruct_ov20_021D4210 *param0, int param1)
     }
 
     for (v2 = 0; v2 < v5; v2++) {
-        ov20_021D4658(param0, v4 + v2, v3);
+        EasyChatWordMenu_PrintWord(menu, v4 + v2, v3);
 
         if (v2 & 1) {
             v3 = (v3 + 24) & 255;
         }
     }
 
-    param0->unk_8C = v0;
-    param0->unk_90 = v1;
+    menu->unk_8C = v0;
+    menu->unk_90 = v1;
 
-    Window_LoadTiles(&param0->unk_10);
-    ov20_021D4E38(&(param0->unk_60), param0->unk_0C, 2, 1, param1 * 24, v6);
+    Window_LoadTiles(&menu->unk_10);
+    ov20_021D4E38(&(menu->unk_60), menu->bgConfig, BG_LAYER_MAIN_2, 1, param1 * 24, v6);
 }
 
-BOOL ov20_021D4578(UnkStruct_ov20_021D4210 *param0)
+BOOL ov20_021D4578(EasyChatWordMenu *menu)
 {
-    if (ov20_021D4E8C(&param0->unk_60)) {
-        Sprite_SetDrawFlag(param0->unk_34, ov20_021D204C(param0->unk_04));
-        Sprite_SetDrawFlag(param0->unk_38, ov20_021D2060(param0->unk_04));
+    if (ov20_021D4E8C(&menu->unk_60)) {
+        Sprite_SetDrawFlag(menu->upArrowSprite, EasyChat_CanScrollWordPickerUp(menu->app));
+        Sprite_SetDrawFlag(menu->downArrowSprite, EasyChat_CanScrollWordPickerDown(menu->app));
         return 1;
     }
 
     return 0;
 }
 
-static void ov20_021D45AC(UnkStruct_ov20_021D4210 *param0, int param1)
+static void ov20_021D45AC(EasyChatWordMenu *menu, int param1)
 {
     int v0, v1;
 
     if (param1 > 0) {
-        v0 = (param0->unk_8C + 120) & 0xff;
-        v1 = (v0 + (param1 * 24)) & 0xff;
+        v0 = (menu->unk_8C + 120) & 0xff;
+        v1 = (v0 + param1 * 24) & 0xff;
     } else {
-        v1 = param0->unk_8C;
-        v0 = (v1 + (param1 * 24)) & 0xff;
+        v1 = menu->unk_8C;
+        v0 = (v1 + param1 * 24) & 0xff;
     }
 
     if (v0 < v1) {
-        Window_FillRectWithColor(&param0->unk_10, 0, 0, v0, 26 * 8, (v1 - v0));
+        Window_FillRectWithColor(&menu->unk_10, 0, 0, v0, 26 * 8, (v1 - v0));
     } else {
-        Window_FillRectWithColor(&param0->unk_10, 0, 0, v0, 26 * 8, 256 - v0);
-        Window_FillRectWithColor(&param0->unk_10, 0, 0, 0, 26 * 8, v1);
+        Window_FillRectWithColor(&menu->unk_10, 0, 0, v0, 26 * 8, 256 - v0);
+        Window_FillRectWithColor(&menu->unk_10, 0, 0, 0, 26 * 8, v1);
     }
 }
 
-static void ov20_021D4638(UnkStruct_ov20_021D4210 *param0)
+static void ov20_021D4638(EasyChatWordMenu *menu)
 {
-    param0->unk_8C = 48;
-    param0->unk_90 = 0;
+    menu->unk_8C = 48;
+    menu->unk_90 = 0;
 
-    Bg_SetOffset(param0->unk_0C, BG_LAYER_MAIN_2, 3, 0);
+    Bg_SetOffset(menu->bgConfig, BG_LAYER_MAIN_2, BG_OFFSET_UPDATE_SET_Y, 0);
 }
 
-static void ov20_021D4658(UnkStruct_ov20_021D4210 *param0, u32 param1, u32 param2)
+static void EasyChatWordMenu_PrintWord(EasyChatWordMenu *menu, u32 index, u32 param2)
 {
-    ov20_021D2008(param0->unk_04, param1, param0->unk_3C);
+    EasyChat_GetWordStringAtIndex(menu->app, index, menu->string);
 
     if (param2 <= 240) {
-        Text_AddPrinterWithParamsAndColor(&param0->unk_10, FONT_SYSTEM, param0->unk_3C, 0 + (param1 & 1) * 112, param2, TEXT_SPEED_NO_TRANSFER, TEXT_COLOR(1, 2, 0), NULL);
+        Text_AddPrinterWithParamsAndColor(&menu->unk_10, FONT_SYSTEM, menu->string, (index & 1) * 112, param2, TEXT_SPEED_NO_TRANSFER, TEXT_COLOR(1, 2, 0), NULL);
     } else {
         u32 v0 = 256 - param2;
 
-        Window_FillTilemap(&param0->unk_20, 0);
-        Text_AddPrinterWithParamsAndColor(&param0->unk_20, FONT_SYSTEM, param0->unk_3C, 0, 0, TEXT_SPEED_NO_TRANSFER, TEXT_COLOR(1, 2, 0), NULL);
-        Window_BlitBitmapRect(&param0->unk_10, param0->unk_20.pixels, 0, 0, 12 * 8, 2 * 8, 0 + (param1 & 1) * 112, param2, 12 * 8, v0);
-        Window_BlitBitmapRect(&param0->unk_10, param0->unk_20.pixels, 0, v0, 12 * 8, 2 * 8, 0 + (param1 & 1) * 112, 0, 12 * 8, (2 * 8) - v0);
+        Window_FillTilemap(&menu->unk_20, 0);
+        Text_AddPrinterWithParamsAndColor(&menu->unk_20, FONT_SYSTEM, menu->string, 0, 0, TEXT_SPEED_NO_TRANSFER, TEXT_COLOR(1, 2, 0), NULL);
+        Window_BlitBitmapRect(&menu->unk_10, menu->unk_20.pixels, 0, 0, 12 * 8, 2 * 8, (index & 1) * 112, param2, 12 * 8, v0);
+        Window_BlitBitmapRect(&menu->unk_10, menu->unk_20.pixels, 0, v0, 12 * 8, 2 * 8, (index & 1) * 112, 0, 12 * 8, (2 * 8) - v0);
     }
 }

@@ -1,0 +1,13 @@
+{
+  "key": 15822,
+  "messages": [
+    {
+      "id": "EasyChatConfirmCancel_Text_Confirm",
+      "en_US": "CONFIRM"
+    },
+    {
+      "id": "EasyChatConfirmCancel_Text_Cancel",
+      "en_US": "CANCEL"
+    }
+  ]
+}

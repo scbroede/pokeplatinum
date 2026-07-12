@@ -41,15 +41,15 @@
 static u32 EasyChatCategories_PrintGroups(EasyChatCategoriesContext *ctx, BgConfig *bgConfig, u32 baseTile);
 static u32 EasyChatCategories_PrintABCModeSelection(EasyChatCategoriesContext *ctx, BgConfig *bgConfig, u32 baseTile);
 static u32 EasyChatCategories_PrintCancelText(EasyChatCategoriesContext *ctx, BgConfig *bgConfig, u32 baseTile);
-static void ov20_021D3E0C(EasyChatCategoriesContext *ctx);
+static void EasyChatCategories_InitCursorSprite(EasyChatCategoriesContext *ctx);
 
-EasyChatCategoriesContext *EasyChatCategoriesContext_New(UnkStruct_ov20_021D2128 *param0, const EasyChatApp *easyChatApp, const EasyChatWordList *param2)
+EasyChatCategoriesContext *EasyChatCategoriesContext_New(UnkStruct_ov20_021D2128 *param0, const EasyChatApp *easyChatApp, const EasyChatWordList *wordList)
 {
     EasyChatCategoriesContext *ctx = Heap_Alloc(HEAP_ID_35, sizeof(EasyChatCategoriesContext));
 
     ctx->unk_00 = param0;
     ctx->easyChatApp = easyChatApp;
-    ctx->unk_08 = param2;
+    ctx->wordList = wordList;
     ctx->bgConfig = ov20_021D2E04(param0);
     ctx->unk_10 = 0;
     ctx->dummy = 0;
@@ -81,7 +81,7 @@ void EasyChatCategories_DrawInterface(EasyChatCategoriesContext *ctx, NARC *narc
     EasyChatCategories_PrintCancelText(ctx, bgConfig, baseTile);
     Bg_SetOffset(bgConfig, BG_LAYER_MAIN_1, BG_OFFSET_UPDATE_SET_X, GROUP_MODE_BG_X_OFFSET);
     Bg_SetOffset(bgConfig, BG_LAYER_MAIN_1, BG_OFFSET_UPDATE_SET_Y, 2);
-    ov20_021D3E0C(ctx);
+    EasyChatCategories_InitCursorSprite(ctx);
 
     G2_SetBlendBrightness(GX_BLEND_PLANEMASK_BG1, -10);
     G2_SetWnd0InsidePlane(GX_WND_PLANEMASK_ALL, TRUE);
@@ -110,7 +110,7 @@ static u32 EasyChatCategories_PrintGroups(EasyChatCategoriesContext *ctx, BgConf
         String *string;
         TextColor color;
 
-        if (EasyChatWordList_GetGroupWordCount(ctx->unk_08, i)) {
+        if (EasyChatWordList_GetGroupWordCount(ctx->wordList, i) != 0) {
             string = MessageLoader_GetNewString(loader, i);
             color = TEXT_COLOR(1, 2, 15);
         } else {
@@ -162,7 +162,7 @@ static u32 EasyChatCategories_PrintABCModeSelection(EasyChatCategoriesContext *c
         EasyChatABCMode_GetCharPos(i, &x, &y);
 
         TextColor color;
-        if (EasyChatWordList_GetLetterWordCount(ctx->unk_08, i)) {
+        if (EasyChatWordList_GetLetterWordCount(ctx->wordList, i) != 0) {
             color = TEXT_COLOR(1, 2, 15);
         } else {
             color = TEXT_COLOR(3, 4, 15);
@@ -215,7 +215,7 @@ static u32 EasyChatCategories_PrintCancelText(EasyChatCategoriesContext *ctx, Bg
     return baseTile;
 }
 
-static void ov20_021D3E0C(EasyChatCategoriesContext *ctx)
+static void EasyChatCategories_InitCursorSprite(EasyChatCategoriesContext *ctx)
 {
     SpriteResourcesHeader v0;
 
@@ -225,11 +225,11 @@ static void ov20_021D3E0C(EasyChatCategoriesContext *ctx)
     Sprite_SetDrawFlag(ctx->cursorSprite, FALSE);
 }
 
-void ov20_021D3E48(EasyChatCategoriesContext *ctx, BOOL param1)
+void EasyChatCategories_SetCursorDrawFlag(EasyChatCategoriesContext *ctx, BOOL draw)
 {
-    Sprite_SetDrawFlag(ctx->cursorSprite, param1);
+    Sprite_SetDrawFlag(ctx->cursorSprite, draw);
 
-    if (param1) {
+    if (draw) {
         if (EasyChat_GetMode(ctx->easyChatApp) == GROUP_MODE) {
             Sprite_SetAnim(ctx->cursorSprite, 4);
         } else {
@@ -238,7 +238,7 @@ void ov20_021D3E48(EasyChatCategoriesContext *ctx, BOOL param1)
     }
 }
 
-void EasyChatCategories_DrawCursor(EasyChatCategoriesContext *ctx, u32 selectedIndex)
+void EasyChatCategories_SetCursorPosition(EasyChatCategoriesContext *ctx, u32 selection)
 {
     u32 mode = EasyChat_GetMode(ctx->easyChatApp);
 
@@ -247,18 +247,18 @@ void EasyChatCategories_DrawCursor(EasyChatCategoriesContext *ctx, u32 selectedI
 
     u32 animID;
 
-    if (selectedIndex == EASY_CHAT_CANCEL) {
+    if (selection == EASY_CHAT_CANCEL) {
         position.x = 132;
         position.y = 150;
         animID = 16;
     } else {
         if (mode == GROUP_MODE) {
-            position.x = 48 + 80 * (selectedIndex % 3);
-            position.y = 54 + 24 * (selectedIndex / 3);
+            position.x = 48 + 80 * (selection % 3);
+            position.y = 54 + 24 * (selection / 3);
             animID = 4;
         } else {
             u32 x, y;
-            EasyChatABCMode_GetCharPos(selectedIndex, &x, &y);
+            EasyChatABCMode_GetCharPos(selection, &x, &y);
 
             position.x = 26 + x;
             position.y = 62 + y;
@@ -276,7 +276,7 @@ void EasyChatCategories_DrawCursor(EasyChatCategoriesContext *ctx, u32 selectedI
 void ov20_021D3EF8(EasyChatCategoriesContext *ctx)
 {
     ctx->unk_14 = 0;
-    ov20_021D4FB0(&(ctx->unk_1C), GX_BLEND_PLANEMASK_BG1, -10, 0, 16);
+    ov20_021D4FB0(&ctx->unk_1C, GX_BLEND_PLANEMASK_BG1, -10, 0, 16);
 }
 
 BOOL ov20_021D3F10(EasyChatCategoriesContext *ctx)
@@ -284,12 +284,12 @@ BOOL ov20_021D3F10(EasyChatCategoriesContext *ctx)
     switch (ctx->unk_14) {
     case 0:
         if (ov20_021D4FF0(&ctx->unk_1C)) {
-            ov20_021D4E38(&(ctx->unk_3C), ctx->bgConfig, 1, 1, 24, 6);
+            ov20_021D4E38(&ctx->unk_3C, ctx->bgConfig, BG_LAYER_MAIN_1, 1, 24, 6);
             ctx->unk_14++;
         }
         break;
     case 1:
-        return ov20_021D4E8C(&(ctx->unk_3C));
+        return ov20_021D4E8C(&ctx->unk_3C);
     }
 
     return 0;
@@ -298,15 +298,15 @@ BOOL ov20_021D3F10(EasyChatCategoriesContext *ctx)
 void ov20_021D3F60(EasyChatCategoriesContext *ctx)
 {
     ctx->unk_14 = 0;
-    ov20_021D4E38(&(ctx->unk_3C), ctx->bgConfig, 1, 1, -24, 6);
+    ov20_021D4E38(&ctx->unk_3C, ctx->bgConfig, BG_LAYER_MAIN_1, 1, -24, 6);
 }
 
 BOOL ov20_021D3F84(EasyChatCategoriesContext *ctx)
 {
     switch (ctx->unk_14) {
     case 0:
-        if (ov20_021D4E8C(&(ctx->unk_3C))) {
-            ov20_021D4FB0(&(ctx->unk_1C), GX_BLEND_PLANEMASK_BG1, 0, -10, 16);
+        if (ov20_021D4E8C(&ctx->unk_3C)) {
+            ov20_021D4FB0(&ctx->unk_1C, GX_BLEND_PLANEMASK_BG1, 0, -10, 16);
             ctx->unk_14++;
         }
         break;
@@ -382,7 +382,7 @@ void ov20_021D40A8(EasyChatCategoriesContext *ctx)
         v0 = ABC_MODE_BG_X_OFFSET - GROUP_MODE_BG_X_OFFSET;
     }
 
-    ov20_021D4E38(&ctx->unk_3C, ctx->bgConfig, 1, 0, v0, 16);
+    ov20_021D4E38(&ctx->unk_3C, ctx->bgConfig, BG_LAYER_MAIN_1, 0, v0, 16);
 }
 
 BOOL ov20_021D40DC(EasyChatCategoriesContext *ctx)

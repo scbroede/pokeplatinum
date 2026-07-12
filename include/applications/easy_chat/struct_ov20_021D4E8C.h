@@ -6,8 +6,8 @@
 
 typedef struct {
     BgConfig *unk_00;
-    u32 unk_04;
-    int unk_08;
+    enum BgLayer bgLayer;
+    enum BgOffsetUpdateOp bgOffsetUpdateOp;
     fx32 unk_0C;
     fx32 unk_10;
     fx32 unk_14;

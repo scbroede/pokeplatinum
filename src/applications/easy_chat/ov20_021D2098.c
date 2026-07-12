@@ -4,13 +4,11 @@
 #include <string.h>
 
 #include "applications/easy_chat/categories.h"
+#include "applications/easy_chat/confirm_cancel_menu.h"
+#include "applications/easy_chat/interface.h"
 #include "applications/easy_chat/main.h"
-#include "applications/easy_chat/ov20_021D2EA4.h"
-#include "applications/easy_chat/ov20_021D3864.h"
 #include "applications/easy_chat/ov20_021D40E8.h"
 #include "applications/easy_chat/ov20_021D4728.h"
-#include "applications/easy_chat/struct_ov20_021D30F8_decl.h"
-#include "applications/easy_chat/struct_ov20_021D3980_decl.h"
 #include "applications/easy_chat/struct_ov20_021D4210_decl.h"
 #include "applications/easy_chat/struct_ov20_021D4AD4_decl.h"
 
@@ -32,9 +30,9 @@ typedef struct UnkStruct_ov20_021D2128_t {
     SysTask *unk_00;
     SysTask *unk_04;
     SysTask *unk_08[4];
-    const EasyChatApp *unk_18;
-    const EasyChatWordList *unk_1C;
-    BgConfig *unk_20;
+    const EasyChatApp *app;
+    const EasyChatWordList *wordList;
+    BgConfig *bgConfig;
     SpriteList *unk_24;
     G2dRenderer unk_28;
     NNSG2dImageProxy unk_1B4[2];
@@ -43,17 +41,17 @@ typedef struct UnkStruct_ov20_021D2128_t {
     NNSG2dCellAnimBankData *unk_22C[2];
     void *unk_234[2];
     void *unk_23C[2];
-    UnkStruct_ov20_021D30F8 *unk_244;
-    UnkStruct_ov20_021D3980 *unk_248;
+    EasyChatInterfaceContext *unk_244;
+    EasyChatConfirmCancelMenu *unk_248;
     EasyChatCategoriesContext *unk_24C;
-    UnkStruct_ov20_021D4210 *unk_250;
+    EasyChatWordMenu *unk_250;
     UnkStruct_ov20_021D4AD4 *unk_254;
 } UnkStruct_ov20_021D2128;
 
 typedef struct {
     UnkStruct_ov20_021D2128 *unk_00;
-    const EasyChatApp *unk_04;
-    const EasyChatWordList *unk_08;
+    const EasyChatApp *app;
+    const EasyChatWordList *wordList;
     u32 unk_0C;
     int unk_10;
     int unk_14;
@@ -94,7 +92,7 @@ static void ov20_021D2DA0(SysTask *param0, void *param1);
 static void ov20_021D2DBC(SysTask *param0, void *param1);
 static void ov20_021D2DD8(SysTask *param0, void *param1);
 
-UnkStruct_ov20_021D2128 *ov20_021D2098(const EasyChatApp *param0, const EasyChatWordList *param1)
+UnkStruct_ov20_021D2128 *ov20_021D2098(const EasyChatApp *param0, const EasyChatWordList *wordList)
 {
     UnkStruct_ov20_021D2128 *v0 = Heap_Alloc(HEAP_ID_35, sizeof(UnkStruct_ov20_021D2128));
 
@@ -104,14 +102,14 @@ UnkStruct_ov20_021D2128 *ov20_021D2098(const EasyChatApp *param0, const EasyChat
         SetVBlankCallback(NULL, NULL);
         DisableHBlank();
 
-        v0->unk_18 = param0;
-        v0->unk_1C = param1;
+        v0->app = param0;
+        v0->wordList = wordList;
 
         NNS_G2dInitOamManagerModule();
         RenderOam_Init(0, 128, 0, 32, 0, 128, 0, 32, 35);
 
         v0->unk_24 = SpriteList_InitRendering(128, &v0->unk_28, HEAP_ID_35);
-        v0->unk_20 = BgConfig_New(HEAP_ID_35);
+        v0->bgConfig = BgConfig_New(HEAP_ID_35);
         v0->unk_00 = SysTask_Start(ov20_021D2178, v0, 2);
         v0->unk_04 = ov20_021D2170(ov20_021D217C, v0, 1);
 
@@ -142,7 +140,7 @@ void ov20_021D2128(UnkStruct_ov20_021D2128 *param0)
         RenderOam_Free();
         SpriteList_Delete(param0->unk_24);
 
-        Heap_Free(param0->unk_20);
+        Heap_Free(param0->bgConfig);
         Heap_Free(param0);
     }
 }
@@ -210,8 +208,8 @@ void ov20_021D21A0(UnkStruct_ov20_021D2128 *param0, int param1)
             v1->unk_14 = 0;
             v1->unk_0C = param1;
             v1->unk_00 = param0;
-            v1->unk_04 = param0->unk_18;
-            v1->unk_08 = param0->unk_1C;
+            v1->app = param0->app;
+            v1->wordList = param0->wordList;
 
             for (v2 = 0; v2 < 4; v2++) {
                 if (param0->unk_08[v2] == NULL) {
@@ -280,19 +278,19 @@ static void ov20_021D2260(SysTask *param0, void *param1)
     ov20_021D24EC(v0);
     ov20_021D2370(v0, narc);
 
-    v0->unk_00->unk_244 = ov20_021D2EA4(v0->unk_00, v0->unk_04, v0->unk_08);
-    ov20_021D2F50(v0->unk_00->unk_244, narc);
+    v0->unk_00->unk_244 = EasyChatInterfaceContext_New(v0->unk_00, v0->app, v0->wordList);
+    EasyChatInterface_Draw(v0->unk_00->unk_244, narc);
 
-    v0->unk_00->unk_248 = ov20_021D3864(v0->unk_00, v0->unk_04, v0->unk_08);
-    ov20_021D3898(v0->unk_00->unk_248, narc);
+    v0->unk_00->unk_248 = EasyChatConfirmCancelMenu_New(v0->unk_00, v0->app, v0->wordList);
+    EasyChatConfirmCancelMenu_Draw(v0->unk_00->unk_248, narc);
 
-    v0->unk_00->unk_24C = EasyChatCategoriesContext_New(v0->unk_00, v0->unk_04, v0->unk_08);
+    v0->unk_00->unk_24C = EasyChatCategoriesContext_New(v0->unk_00, v0->app, v0->wordList);
     EasyChatCategories_DrawInterface(v0->unk_00->unk_24C, narc);
 
-    v0->unk_00->unk_250 = ov20_021D40E8(v0->unk_00, v0->unk_04, v0->unk_08);
+    v0->unk_00->unk_250 = EasyChatWordMenu_New(v0->unk_00, v0->app, v0->wordList);
     ov20_021D41A8(v0->unk_00->unk_250);
 
-    v0->unk_00->unk_254 = ov20_021D4728(v0->unk_00, v0->unk_04, v0->unk_08);
+    v0->unk_00->unk_254 = ov20_021D4728(v0->unk_00, v0->app, v0->wordList);
     ov20_021D4774(v0->unk_00->unk_254, narc);
 
     GXLayers_EngineAToggleLayers(GX_PLANEMASK_OBJ, TRUE);
@@ -337,10 +335,10 @@ static void ov20_021D2414(SysTask *param0, void *param1)
         if (IsScreenFadeDone()) {
             int v2;
 
-            ov20_021D2EF0(v0->unk_00->unk_244);
-            ov20_021D3880(v0->unk_00->unk_248);
+            EasyChatInterfaceContext_Free(v0->unk_00->unk_244);
+            EasyChatConfirmCancelMenu_Free(v0->unk_00->unk_248);
             EasyChatCategoriesContext_Free(v0->unk_00->unk_24C);
-            ov20_021D4164(v0->unk_00->unk_250);
+            EasyChatWordMenu_Free(v0->unk_00->unk_250);
             ov20_021D4764(v0->unk_00->unk_254);
 
             for (v2 = 0; v2 < 2; v2++) {
@@ -353,11 +351,11 @@ static void ov20_021D2414(SysTask *param0, void *param1)
                 }
             }
 
-            Bg_FreeTilemapBuffer(v1->unk_20, BG_LAYER_MAIN_0);
-            Bg_FreeTilemapBuffer(v1->unk_20, BG_LAYER_MAIN_1);
-            Bg_FreeTilemapBuffer(v1->unk_20, BG_LAYER_MAIN_2);
-            Bg_FreeTilemapBuffer(v1->unk_20, BG_LAYER_MAIN_3);
-            Bg_FreeTilemapBuffer(v1->unk_20, BG_LAYER_SUB_0);
+            Bg_FreeTilemapBuffer(v1->bgConfig, BG_LAYER_MAIN_0);
+            Bg_FreeTilemapBuffer(v1->bgConfig, BG_LAYER_MAIN_1);
+            Bg_FreeTilemapBuffer(v1->bgConfig, BG_LAYER_MAIN_2);
+            Bg_FreeTilemapBuffer(v1->bgConfig, BG_LAYER_MAIN_3);
+            Bg_FreeTilemapBuffer(v1->bgConfig, BG_LAYER_SUB_0);
 
             ov20_021D2238(v0);
         }
@@ -463,12 +461,12 @@ static void ov20_021D24EC(UnkStruct_ov20_021D2238 *param0)
     GXLayers_SetBanks(&v0);
     SetAllGraphicsModes(&v1);
 
-    Bg_InitFromTemplate(v7->unk_20, BG_LAYER_MAIN_0, &v2, 0);
-    Bg_InitFromTemplate(v7->unk_20, BG_LAYER_MAIN_1, &v3, 0);
-    Bg_InitFromTemplate(v7->unk_20, BG_LAYER_MAIN_2, &v4, 0);
-    Bg_InitFromTemplate(v7->unk_20, BG_LAYER_MAIN_3, &v5, 0);
+    Bg_InitFromTemplate(v7->bgConfig, BG_LAYER_MAIN_0, &v2, 0);
+    Bg_InitFromTemplate(v7->bgConfig, BG_LAYER_MAIN_1, &v3, 0);
+    Bg_InitFromTemplate(v7->bgConfig, BG_LAYER_MAIN_2, &v4, 0);
+    Bg_InitFromTemplate(v7->bgConfig, BG_LAYER_MAIN_3, &v5, 0);
 
-    Bg_InitFromTemplate(v7->unk_20, BG_LAYER_SUB_0, &v6, 0);
+    Bg_InitFromTemplate(v7->bgConfig, BG_LAYER_SUB_0, &v6, 0);
 }
 
 static void ov20_021D2570(SysTask *param0, void *param1)
@@ -497,8 +495,8 @@ static void ov20_021D25C0(SysTask *param0, void *param1)
     UnkStruct_ov20_021D2238 *v0 = param1;
     UnkStruct_ov20_021D2128 *v1 = v0->unk_00;
 
-    ov20_021D3228(v1->unk_244);
-    ov20_021D3700(v1->unk_244, EasyChat_GetCurrentWordSlot(v0->unk_04));
+    EasyChatInterface_DrawEntryWindow(v1->unk_244);
+    EasyChatInterface_SetCursorPosition(v1->unk_244, EasyChat_GetCurrentWordSlot(v0->app));
 
     ov20_021D2238(v0);
 }
@@ -508,11 +506,11 @@ static void ov20_021D25EC(SysTask *param0, void *param1)
     UnkStruct_ov20_021D2238 *v0 = param1;
     UnkStruct_ov20_021D2128 *v1 = v0->unk_00;
 
-    ov20_021D369C(v1->unk_244, 0);
-    ov20_021D36B0(v1->unk_244);
+    EasyChatInterface_SetCursorDrawFlag(v1->unk_244, 0);
+    EasyChatInterface_HideSentenceSelectionArrows(v1->unk_244);
 
-    ov20_021D39D4(v1->unk_248, 1);
-    ov20_021D39EC(v1->unk_248, ov20_021D1FD4(v1->unk_18));
+    EasyChatConfirmCancelMenu_SetCursorDrawFlag(v1->unk_248, 1);
+    EasyChatConfirmCancelMenu_SetCursorPosition(v1->unk_248, ov20_021D1FD4(v1->app));
 
     ov20_021D2238(v0);
 }
@@ -522,9 +520,9 @@ static void ov20_021D2630(SysTask *param0, void *param1)
     UnkStruct_ov20_021D2238 *v0 = param1;
     UnkStruct_ov20_021D2128 *v1 = v0->unk_00;
 
-    ov20_021D39D4(v1->unk_248, 0);
-    ov20_021D36D0(v1->unk_244);
-    ov20_021D369C(v1->unk_244, 1);
+    EasyChatConfirmCancelMenu_SetCursorDrawFlag(v1->unk_248, 0);
+    EasyChatInterface_DrawSentenceSelectionArrows(v1->unk_244);
+    EasyChatInterface_SetCursorDrawFlag(v1->unk_244, 1);
     ov20_021D2238(v0);
 }
 
@@ -535,16 +533,16 @@ static void ov20_021D2660(SysTask *param0, void *param1)
 
     switch (v0->unk_14) {
     case 0:
-        ov20_021D3684(v1->unk_244);
-        ov20_021D36B0(v1->unk_244);
+        EasyChatInterface_StopCursorBlink(v1->unk_244);
+        EasyChatInterface_HideSentenceSelectionArrows(v1->unk_244);
         ov20_021D3EF8(v1->unk_24C);
         v0->unk_14++;
         break;
     case 1:
         if (ov20_021D3F10(v1->unk_24C)) {
-            ov20_021D3A2C(v1->unk_248);
-            EasyChatCategories_DrawCursor(v1->unk_24C, EasyChat_GetCategoryCursorPos(v1->unk_18));
-            ov20_021D3E48(v1->unk_24C, 1);
+            EasyChatConfirmCancelMenu_Hide(v1->unk_248);
+            EasyChatCategories_SetCursorPosition(v1->unk_24C, EasyChat_GetCategoryCursorPos(v1->app));
+            EasyChatCategories_SetCursorDrawFlag(v1->unk_24C, 1);
             ov20_021D2238(v0);
         }
         break;
@@ -586,7 +584,7 @@ static void ov20_021D2740(SysTask *param0, void *param1)
         v0->unk_14++;
         break;
     case 1:
-        ov20_021D3E48(v1->unk_24C, 0);
+        EasyChatCategories_SetCursorDrawFlag(v1->unk_24C, 0);
         ov20_021D40A8(v1->unk_24C);
         v0->unk_14++;
         break;
@@ -598,8 +596,8 @@ static void ov20_021D2740(SysTask *param0, void *param1)
         break;
     case 3:
         if (ov20_021D4C2C(v1->unk_254)) {
-            EasyChatCategories_DrawCursor(v1->unk_24C, EasyChat_GetCategoryCursorPos(v1->unk_18));
-            ov20_021D3E48(v1->unk_24C, 1);
+            EasyChatCategories_SetCursorPosition(v1->unk_24C, EasyChat_GetCategoryCursorPos(v1->app));
+            EasyChatCategories_SetCursorDrawFlag(v1->unk_24C, 1);
             ov20_021D2238(v0);
         }
         break;
@@ -613,15 +611,15 @@ static void ov20_021D27E4(SysTask *param0, void *param1)
 
     switch (v0->unk_14) {
     case 0:
-        ov20_021D3A40(v1->unk_248);
-        ov20_021D3E48(v1->unk_24C, 0);
+        EasyChatConfirmCancelMenu_Show(v1->unk_248);
+        EasyChatCategories_SetCursorDrawFlag(v1->unk_24C, 0);
         ov20_021D3F60(v1->unk_24C);
         v0->unk_14++;
         break;
     case 1:
         if (ov20_021D3F84(v1->unk_24C)) {
-            ov20_021D36D0(v1->unk_244);
-            ov20_021D3690(v1->unk_244);
+            EasyChatInterface_DrawSentenceSelectionArrows(v1->unk_244);
+            EasyChatInterface_StartCursorBlink(v1->unk_244);
             ov20_021D2238(v0);
         }
         break;
@@ -636,7 +634,7 @@ static void ov20_021D2848(SysTask *param0, void *param1)
     switch (v0->unk_14) {
     case 0:
         ov20_021D4294(v1->unk_250);
-        ov20_021D3E48(v1->unk_24C, 0);
+        EasyChatCategories_SetCursorDrawFlag(v1->unk_24C, 0);
         ov20_021D4004(v1->unk_24C);
         v0->unk_14++;
         break;
@@ -648,8 +646,8 @@ static void ov20_021D2848(SysTask *param0, void *param1)
         break;
     case 2:
         if (ov20_021D4390(v1->unk_250)) {
-            ov20_021D4480(v1->unk_250, ov20_021D2034(v1->unk_18));
-            ov20_021D4440(v1->unk_250, 1);
+            ov20_021D4480(v1->unk_250, EasyChat_GetWordPickerCursorPos(v1->app));
+            EasyChatWordMenu_SetSpriteDrawFlags(v1->unk_250, 1);
             ov20_021D4DBC(v1->unk_254, 1);
             ov20_021D2238(v0);
         }
@@ -668,7 +666,7 @@ static void ov20_021D28E8(SysTask *param0, void *param1)
         v0->unk_14++;
         break;
     case 1:
-        ov20_021D4440(v1->unk_250, 0);
+        EasyChatWordMenu_SetSpriteDrawFlags(v1->unk_250, 0);
         ov20_021D4DBC(v1->unk_254, 0);
         ov20_021D43B4(v1->unk_250);
         v0->unk_14++;
@@ -686,8 +684,8 @@ static void ov20_021D28E8(SysTask *param0, void *param1)
     case 4:
         if (ov20_021D4078(v1->unk_24C)
             && ov20_021D4C2C(v1->unk_254)) {
-            EasyChatCategories_DrawCursor(v1->unk_24C, EasyChat_GetCategoryCursorPos(v1->unk_18));
-            ov20_021D3E48(v1->unk_24C, 1);
+            EasyChatCategories_SetCursorPosition(v1->unk_24C, EasyChat_GetCategoryCursorPos(v1->app));
+            EasyChatCategories_SetCursorDrawFlag(v1->unk_24C, 1);
             ov20_021D2238(v0);
         }
         break;
@@ -701,8 +699,8 @@ static void ov20_021D29BC(SysTask *param0, void *param1)
 
     switch (v0->unk_14) {
     case 0:
-        ov20_021D3A40(v1->unk_248);
-        ov20_021D4440(v1->unk_250, 0);
+        EasyChatConfirmCancelMenu_Show(v1->unk_248);
+        EasyChatWordMenu_SetSpriteDrawFlags(v1->unk_250, 0);
         ov20_021D4DBC(v1->unk_254, 0);
         ov20_021D43B4(v1->unk_250);
         v0->unk_14++;
@@ -722,10 +720,10 @@ static void ov20_021D29BC(SysTask *param0, void *param1)
         break;
     case 3:
         if (ov20_021D3FF8(v1->unk_24C)) {
-            ov20_021D3228(v1->unk_244);
-            ov20_021D369C(v1->unk_244, 1);
-            ov20_021D36D0(v1->unk_244);
-            ov20_021D3690(v1->unk_244);
+            EasyChatInterface_DrawEntryWindow(v1->unk_244);
+            EasyChatInterface_SetCursorDrawFlag(v1->unk_244, 1);
+            EasyChatInterface_DrawSentenceSelectionArrows(v1->unk_244);
+            EasyChatInterface_StartCursorBlink(v1->unk_244);
             ov20_021D2238(v0);
         }
     }
@@ -738,8 +736,8 @@ static void ov20_021D2A9C(SysTask *param0, void *param1)
 
     switch (v0->unk_14) {
     case 0:
-        ov20_021D3A40(v1->unk_248);
-        ov20_021D4440(v1->unk_250, 0);
+        EasyChatConfirmCancelMenu_Show(v1->unk_248);
+        EasyChatWordMenu_SetSpriteDrawFlags(v1->unk_250, 0);
         ov20_021D4DBC(v1->unk_254, 0);
         ov20_021D43B4(v1->unk_250);
         v0->unk_14++;
@@ -759,9 +757,9 @@ static void ov20_021D2A9C(SysTask *param0, void *param1)
         break;
     case 3:
         if (ov20_021D3FF8(v1->unk_24C)) {
-            ov20_021D3228(v1->unk_244);
-            ov20_021D369C(v1->unk_244, 0);
-            ov20_021D39D4(v1->unk_248, 1);
+            EasyChatInterface_DrawEntryWindow(v1->unk_244);
+            EasyChatInterface_SetCursorDrawFlag(v1->unk_244, 0);
+            EasyChatConfirmCancelMenu_SetCursorDrawFlag(v1->unk_248, 1);
             ov20_021D2238(v0);
         }
     }
@@ -772,7 +770,7 @@ static void ov20_021D2B74(SysTask *param0, void *param1)
     UnkStruct_ov20_021D2238 *v0 = param1;
     UnkStruct_ov20_021D2128 *v1 = v0->unk_00;
 
-    ov20_021D3700(v1->unk_244, EasyChat_GetCurrentWordSlot(v1->unk_18));
+    EasyChatInterface_SetCursorPosition(v1->unk_244, EasyChat_GetCurrentWordSlot(v1->app));
     ov20_021D2238(v0);
 }
 
@@ -781,7 +779,7 @@ static void ov20_021D2B94(SysTask *param0, void *param1)
     UnkStruct_ov20_021D2238 *v0 = param1;
     UnkStruct_ov20_021D2128 *v1 = v0->unk_00;
 
-    ov20_021D39EC(v1->unk_248, ov20_021D1FD4(v1->unk_18));
+    EasyChatConfirmCancelMenu_SetCursorPosition(v1->unk_248, ov20_021D1FD4(v1->app));
     ov20_021D2238(v0);
 }
 
@@ -790,7 +788,7 @@ static void ov20_021D2BB4(SysTask *param0, void *param1)
     UnkStruct_ov20_021D2238 *v0 = param1;
     UnkStruct_ov20_021D2128 *v1 = v0->unk_00;
 
-    EasyChatCategories_DrawCursor(v1->unk_24C, EasyChat_GetCategoryCursorPos(v1->unk_18));
+    EasyChatCategories_SetCursorPosition(v1->unk_24C, EasyChat_GetCategoryCursorPos(v1->app));
     ov20_021D2238(v0);
 }
 
@@ -799,7 +797,7 @@ static void ov20_021D2BD4(SysTask *param0, void *param1)
     UnkStruct_ov20_021D2238 *v0 = param1;
     UnkStruct_ov20_021D2128 *v1 = v0->unk_00;
 
-    ov20_021D4480(v1->unk_250, ov20_021D2034(v1->unk_18));
+    ov20_021D4480(v1->unk_250, EasyChat_GetWordPickerCursorPos(v1->app));
     ov20_021D2238(v0);
 }
 
@@ -810,7 +808,7 @@ static void ov20_021D2BF4(SysTask *param0, void *param1)
 
     switch (v0->unk_14) {
     case 0:
-        ov20_021D44BC(v1->unk_250, ov20_021D2040(v1->unk_18));
+        ov20_021D44BC(v1->unk_250, EasyChat_GetWordPickerScrollDistance(v1->app));
         v0->unk_14++;
         break;
     case 1:
@@ -827,7 +825,7 @@ static void ov20_021D2C44(SysTask *param0, void *param1)
     UnkStruct_ov20_021D2238 *v0 = param1;
     UnkStruct_ov20_021D2128 *v1 = v0->unk_00;
 
-    ov20_021D3578(v1->unk_244, 0);
+    EasyChatInterface_PrintMessage(v1->unk_244, EC_MESSAGE_TYPE_INSTRUCTIONS);
     ov20_021D2238(v0);
 }
 
@@ -836,13 +834,13 @@ static void ov20_021D2C60(SysTask *param0, void *param1)
     UnkStruct_ov20_021D2238 *v0 = param1;
     UnkStruct_ov20_021D2128 *v1 = v0->unk_00;
 
-    ov20_021D3578(v1->unk_244, 2);
-    ov20_021D3790(v1->unk_244, ov20_021D208C(v0->unk_04));
+    EasyChatInterface_PrintMessage(v1->unk_244, EC_MESSAGE_TYPE_CONFIRM_ANSWER);
+    EasyChatInterface_OpenYesNoMenu(v1->unk_244, ov20_021D208C(v0->app));
 
-    if (ov20_021D39E0(v1->unk_248)) {
-        ov20_021D39BC(v1->unk_248);
+    if (EasyChatConfirmCancelMenu_GetCursorDrawFlag(v1->unk_248)) {
+        EasyChatConfirmCancelMenu_StopCursorBlink(v1->unk_248);
     } else {
-        ov20_021D3684(v1->unk_244);
+        EasyChatInterface_StopCursorBlink(v1->unk_244);
     }
 
     ov20_021D2238(v0);
@@ -853,13 +851,13 @@ static void ov20_021D2CB0(SysTask *param0, void *param1)
     UnkStruct_ov20_021D2238 *v0 = param1;
     UnkStruct_ov20_021D2128 *v1 = v0->unk_00;
 
-    ov20_021D3578(v1->unk_244, 3);
-    ov20_021D3790(v1->unk_244, ov20_021D208C(v0->unk_04));
+    EasyChatInterface_PrintMessage(v1->unk_244, EC_MESSAGE_TYPE_CONFIRM_QUIT);
+    EasyChatInterface_OpenYesNoMenu(v1->unk_244, ov20_021D208C(v0->app));
 
-    if (ov20_021D39E0(v1->unk_248)) {
-        ov20_021D39BC(v1->unk_248);
+    if (EasyChatConfirmCancelMenu_GetCursorDrawFlag(v1->unk_248)) {
+        EasyChatConfirmCancelMenu_StopCursorBlink(v1->unk_248);
     } else {
-        ov20_021D3684(v1->unk_244);
+        EasyChatInterface_StopCursorBlink(v1->unk_244);
     }
 
     ov20_021D2238(v0);
@@ -870,7 +868,7 @@ static void ov20_021D2D00(SysTask *param0, void *param1)
     UnkStruct_ov20_021D2238 *v0 = param1;
     UnkStruct_ov20_021D2128 *v1 = v0->unk_00;
 
-    ov20_021D3578(v1->unk_244, 1);
+    EasyChatInterface_PrintMessage(v1->unk_244, EC_MESSAGE_TYPE_PLEASE_ENTER);
     ov20_021D2238(v0);
 }
 
@@ -879,7 +877,7 @@ static void ov20_021D2D1C(SysTask *param0, void *param1)
     UnkStruct_ov20_021D2238 *v0 = param1;
     UnkStruct_ov20_021D2128 *v1 = v0->unk_00;
 
-    ov20_021D381C(v1->unk_244, ov20_021D208C(v0->unk_04));
+    EasyChatInterface_UpdateYesNoArrow(v1->unk_244, ov20_021D208C(v0->app));
     ov20_021D2238(v0);
 }
 
@@ -888,13 +886,13 @@ static void ov20_021D2D3C(SysTask *param0, void *param1)
     UnkStruct_ov20_021D2238 *v0 = param1;
     UnkStruct_ov20_021D2128 *v1 = v0->unk_00;
 
-    ov20_021D3578(v1->unk_244, 0);
-    ov20_021D384C(v1->unk_244);
+    EasyChatInterface_PrintMessage(v1->unk_244, EC_MESSAGE_TYPE_INSTRUCTIONS);
+    EasyChatInterface_CloseYesNoMenu(v1->unk_244);
 
-    if (ov20_021D39E0(v1->unk_248)) {
-        ov20_021D39C8(v1->unk_248);
+    if (EasyChatConfirmCancelMenu_GetCursorDrawFlag(v1->unk_248)) {
+        EasyChatConfirmCancelMenu_StartCursorBlink(v1->unk_248);
     } else {
-        ov20_021D3690(v1->unk_244);
+        EasyChatInterface_StartCursorBlink(v1->unk_244);
     }
 
     ov20_021D2238(v0);
@@ -938,12 +936,12 @@ static void ov20_021D2DD8(SysTask *param0, void *param1)
 
 u32 ov20_021D2DF4(UnkStruct_ov20_021D2128 *param0)
 {
-    return ov20_021D3574(param0->unk_244);
+    return EasyChatInterface_GetWordSlotCount(param0->unk_244);
 }
 
 BgConfig *ov20_021D2E04(UnkStruct_ov20_021D2128 *param0)
 {
-    return param0->unk_20;
+    return param0->bgConfig;
 }
 
 SpriteList *ov20_021D2E08(UnkStruct_ov20_021D2128 *param0)
@@ -964,7 +962,7 @@ void ov20_021D2E0C(UnkStruct_ov20_021D2128 *param0, SpriteResourcesHeader *param
     param1->isVRamTransfer = 0;
 }
 
-Sprite *ov20_021D2E50(UnkStruct_ov20_021D2128 *param0, SpriteResourcesHeader *param1, u32 param2, u32 param3, u32 param4, int param5)
+Sprite *ov20_021D2E50(UnkStruct_ov20_021D2128 *param0, SpriteResourcesHeader *param1, u32 x, u32 y, u32 priority, enum NNS_G2D_VRAM_TYPE vramType)
 {
     SpriteListTemplate v0;
     Sprite *v1;
@@ -972,11 +970,11 @@ Sprite *ov20_021D2E50(UnkStruct_ov20_021D2128 *param0, SpriteResourcesHeader *pa
 
     v0.list = param0->unk_24;
     v0.resourceData = param1;
-    v0.position.x = param2 * FX32_ONE;
-    v0.position.y = param3 * FX32_ONE;
+    v0.position.x = x * FX32_ONE;
+    v0.position.y = y * FX32_ONE;
     v0.position.z = 0;
-    v0.priority = param4;
-    v0.vramType = param5;
+    v0.priority = priority;
+    v0.vramType = vramType;
     v0.heapID = HEAP_ID_35;
 
     v2 = OS_DisableInterrupts();

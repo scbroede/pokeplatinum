@@ -22,18 +22,20 @@
 #include "sys_task_manager.h"
 #include "text.h"
 
+#include "res/text/bank/easy_chat.h"
+
 typedef struct {
-    void *unk_00;
+    void *ncerBuffer;
     NNSG2dCellDataBank *unk_04;
-    void *unk_08;
+    void *nanrBuffer;
     NNSG2dAnimBankData *unk_0C;
 } UnkStruct_ov20_021D4B2C;
 
 typedef struct UnkStruct_ov20_021D4AD4_t {
     UnkStruct_ov20_021D2128 *unk_00;
-    const EasyChatApp *unk_04;
-    const EasyChatWordList *unk_08;
-    BgConfig *unk_0C;
+    const EasyChatApp *app;
+    const EasyChatWordList *unusedWordList;
+    BgConfig *bgConfig;
     SpriteList *unk_10;
     Sprite *unk_14;
     Sprite *unk_18;
@@ -48,11 +50,11 @@ typedef struct {
     u16 unk_08;
     u16 unk_0A;
     u16 unk_0C;
-    u16 unk_0E;
-    u16 unk_10;
+    u16 x1;
+    u16 y1;
     u16 unk_12;
-    u16 unk_14;
-    u16 unk_16;
+    u16 x2;
+    u16 y2;
 } UnkStruct_ov20_021D4BA4;
 
 static void ov20_021D4874(UnkStruct_ov20_021D4AD4 *param0, NARC *param1);
@@ -65,14 +67,14 @@ static void ov20_021D4B2C(UnkStruct_ov20_021D4B2C *param0);
 static void ov20_021D4C40(SysTask *param0, void *param1);
 static Sprite *ov20_021D4B40(UnkStruct_ov20_021D4AD4 *param0, NNSG2dImageProxy *param1, NNSG2dImagePaletteProxy *param2, UnkStruct_ov20_021D4B2C *param3, int param4, int param5, int param6, int param7);
 
-UnkStruct_ov20_021D4AD4 *ov20_021D4728(UnkStruct_ov20_021D2128 *param0, const EasyChatApp *param1, const EasyChatWordList *param2)
+UnkStruct_ov20_021D4AD4 *ov20_021D4728(UnkStruct_ov20_021D2128 *param0, const EasyChatApp *param1, const EasyChatWordList *wordList)
 {
     UnkStruct_ov20_021D4AD4 *v0 = Heap_Alloc(HEAP_ID_35, sizeof(UnkStruct_ov20_021D4AD4));
 
     v0->unk_00 = param0;
-    v0->unk_04 = param1;
-    v0->unk_08 = param2;
-    v0->unk_0C = ov20_021D2E04(param0);
+    v0->app = param1;
+    v0->unusedWordList = wordList;
+    v0->bgConfig = ov20_021D2E04(param0);
     v0->unk_10 = ov20_021D2E08(param0);
     v0->unk_14 = NULL;
     v0->unk_18 = NULL;
@@ -87,27 +89,27 @@ void ov20_021D4764(UnkStruct_ov20_021D4AD4 *param0)
     Heap_Free(param0);
 }
 
-void ov20_021D4774(UnkStruct_ov20_021D4AD4 *param0, NARC *param1)
+void ov20_021D4774(UnkStruct_ov20_021D4AD4 *param0, NARC *narc)
 {
-    Graphics_LoadPaletteFromOpenNARC(param1, 21, 4, 0, 0x40, HEAP_ID_35);
-    Graphics_LoadTilemapToBgLayerFromOpenNARC(param1, 11, param0->unk_0C, 4, 0, 0, 1, HEAP_ID_35);
+    Graphics_LoadPaletteFromOpenNARC(narc, 21, PAL_LOAD_SUB_BG, 0, PALETTE_SIZE_BYTES * 2, HEAP_ID_35);
+    Graphics_LoadTilemapToBgLayerFromOpenNARC(narc, 11, param0->bgConfig, 4, 0, 0, 1, HEAP_ID_35);
 
-    ov20_021D4874(param0, param1);
-    ov20_021D48C4(param0, param1);
+    ov20_021D4874(param0, narc);
+    ov20_021D48C4(param0, narc);
 
-    if (EasyChat_GetMode(param0->unk_04) == 0) {
-        Bg_CopyToTilemapRect(param0->unk_0C, 4, 3, 3, 11, 7, param0->unk_2C[3], 0, 0, 11, 7);
-        Bg_CopyToTilemapRect(param0->unk_0C, 4, 3, 14, 11, 7, param0->unk_2C[4], 0, 0, 11, 7);
+    if (EasyChat_GetMode(param0->app) == GROUP_MODE) {
+        Bg_CopyToTilemapRect(param0->bgConfig, 4, 3, 3, 11, 7, param0->unk_2C[3], 0, 0, 11, 7);
+        Bg_CopyToTilemapRect(param0->bgConfig, 4, 3, 14, 11, 7, param0->unk_2C[4], 0, 0, 11, 7);
     } else {
-        Bg_CopyToTilemapRect(param0->unk_0C, 4, 3, 3, 11, 7, param0->unk_2C[0], 0, 0, 11, 7);
-        Bg_CopyToTilemapRect(param0->unk_0C, 4, 3, 14, 11, 7, param0->unk_2C[7], 0, 0, 11, 7);
+        Bg_CopyToTilemapRect(param0->bgConfig, 4, 3, 3, 11, 7, param0->unk_2C[0], 0, 0, 11, 7);
+        Bg_CopyToTilemapRect(param0->bgConfig, 4, 3, 14, 11, 7, param0->unk_2C[7], 0, 0, 11, 7);
     }
 
-    ov20_021D4A24(param0, param1);
-    Bg_CopyTilemapBufferToVRAM(param0->unk_0C, 4);
+    ov20_021D4A24(param0, narc);
+    Bg_CopyTilemapBufferToVRAM(param0->bgConfig, BG_LAYER_SUB_0);
 }
 
-static void ov20_021D4874(UnkStruct_ov20_021D4AD4 *param0, NARC *param1)
+static void ov20_021D4874(UnkStruct_ov20_021D4AD4 *param0, NARC *narc)
 {
     static const u16 v0[] = {
         12,
@@ -119,46 +121,43 @@ static void ov20_021D4874(UnkStruct_ov20_021D4AD4 *param0, NARC *param1)
         18,
         19,
     };
-    int v1;
-    void *v2;
-    NNSG2dScreenData *v3;
 
-    for (v1 = 0; v1 < NELEMS(v0); v1++) {
-        v2 = Graphics_GetScrnDataFromOpenNARC(param1, v0[v1], 1, &v3, HEAP_ID_35);
+    for (int i = 0; i < NELEMS(v0); i++) {
+        NNSG2dScreenData *screenData;
+        void *nscrBuffer = Graphics_GetScrnDataFromOpenNARC(narc, v0[i], TRUE, &screenData, HEAP_ID_35);
 
-        if (v2) {
-            MI_CpuCopy16(v3->rawData, param0->unk_2C[v1], 77 * 2);
-            DC_FlushRange(param0->unk_2C[v1], 77 * 2);
-            Heap_Free(v2);
+        if (nscrBuffer) {
+            MI_CpuCopy16(screenData->rawData, param0->unk_2C[i], 77 * 2);
+            DC_FlushRange(param0->unk_2C[i], 77 * 2);
+            Heap_Free(nscrBuffer);
         }
     }
 }
 
-static void ov20_021D48C4(UnkStruct_ov20_021D4AD4 *param0, NARC *param1)
+static void ov20_021D48C4(UnkStruct_ov20_021D4AD4 *param0, NARC *narc)
 {
-    String *v0, *v1;
-    void *v2;
-    NNSG2dCharacterData *v3;
-
     Font_InitManager(FONT_SUBSCREEN, HEAP_ID_SYSTEM);
-    v0 = MessageBank_GetNewStringFromNARC(0x1A, 0x1B5, 0xB, 0x23);
-    v1 = MessageBank_GetNewStringFromNARC(0x1A, 0x1B5, 0xC, 0x23);
-    v2 = Graphics_GetCharDataFromOpenNARC(param1, 20, 1, &v3, 0x23);
-    if (v2) {
-        Window v4;
+    String *v0 = MessageBank_GetNewStringFromNARC(NARC_INDEX_MSGDATA__PL_MSG, TEXT_BANK_EASY_CHAT, EasyChat_Text_GroupMode, HEAP_ID_35);
+    String *v1 = MessageBank_GetNewStringFromNARC(NARC_INDEX_MSGDATA__PL_MSG, TEXT_BANK_EASY_CHAT, EasyChat_Text_ABCMode, HEAP_ID_35);
 
-        Window_Init(&v4);
-        v4.bgConfig = param0->unk_0C;
-        v4.width = 11;
-        v4.height = 57;
-        v4.colorMode = 0;
-        v4.pixels = v3->pRawData;
-        ov20_021D498C(&v4, param0->unk_0C, v0, 0);
-        v4.pixels = (u8 *)(v3->pRawData) + (11 * 7 * 4 * 0x20);
-        ov20_021D498C(&v4, param0->unk_0C, v1, 0);
-        DC_FlushRange(v3->pRawData, v3->szByte);
-        Bg_LoadTiles(param0->unk_0C, 4, v3->pRawData, v3->szByte, 0);
-        Heap_Free(v2);
+    NNSG2dCharacterData *charData;
+    void *ncgrBuffer = Graphics_GetCharDataFromOpenNARC(narc, 20, TRUE, &charData, HEAP_ID_35);
+
+    if (ncgrBuffer) {
+        Window window;
+
+        Window_Init(&window);
+        window.bgConfig = param0->bgConfig;
+        window.width = 11;
+        window.height = 57;
+        window.colorMode = 0;
+        window.pixels = charData->pRawData;
+        ov20_021D498C(&window, param0->bgConfig, v0, 0);
+        window.pixels = (u8 *)(charData->pRawData) + (11 * 7 * 4 * 0x20);
+        ov20_021D498C(&window, param0->bgConfig, v1, 0);
+        DC_FlushRange(charData->pRawData, charData->szByte);
+        Bg_LoadTiles(param0->bgConfig, BG_LAYER_SUB_0, charData->pRawData, charData->szByte, 0);
+        Heap_Free(ncgrBuffer);
     }
 
     String_Free(v1);
@@ -173,46 +172,43 @@ static const s16 Unk_ov20_021D52EC[] = {
     (22 + 56 * 3) - 1,
 };
 
-static void ov20_021D498C(Window *param0, BgConfig *param1, const String *param2, int param3)
+static void ov20_021D498C(Window *param0, BgConfig *unused, const String *param2, int param3)
 {
-    int v0, v1, v2, v3;
-    u32 v4;
-    String *v5;
+    int i;
+    u32 numLines = String_NumLines(param2);
+    String *line = String_Init(32, HEAP_ID_35);
+    param3 += ((2 - numLines) * 16) / 2;
 
-    v4 = String_NumLines(param2);
-    v5 = String_Init(32, HEAP_ID_35);
-    param3 += ((2 - v4) * 16) / 2;
-
-    for (v1 = 0; v1 < v4; v1++) {
-        String_CopyLineNum(v5, param2, v1);
-        v2 = Font_CalcCenterAlignment(2, v5, 0, 88);
-        for (v0 = 0; v0 < NELEMS(Unk_ov20_021D52EC); v0++) {
-            v3 = Unk_ov20_021D52EC[v0] + param3;
-            Text_AddPrinterWithParamsAndColor(param0, FONT_SUBSCREEN, v5, v2, v3, TEXT_SPEED_NO_TRANSFER, TEXT_COLOR(1, 2, 3), NULL);
+    for (i = 0; i < numLines; i++) {
+        String_CopyLineNum(line, param2, i);
+        int xOffset = Font_CalcCenterAlignment(FONT_SUBSCREEN, line, 0, 88);
+        for (int v0 = 0; v0 < NELEMS(Unk_ov20_021D52EC); v0++) {
+            int yOffset = Unk_ov20_021D52EC[v0] + param3;
+            Text_AddPrinterWithParamsAndColor(param0, FONT_SUBSCREEN, line, xOffset, yOffset, TEXT_SPEED_NO_TRANSFER, TEXT_COLOR(1, 2, 3), NULL);
         }
         param3 += 16;
     }
-    String_Free(v5);
+    String_Free(line);
 }
 
-static void ov20_021D4A24(UnkStruct_ov20_021D4AD4 *param0, NARC *param1)
+static void ov20_021D4A24(UnkStruct_ov20_021D4AD4 *param0, NARC *narc)
 {
-    NNSG2dImagePaletteProxy v0;
-    NNSG2dImageProxy v1;
+    NNSG2dImagePaletteProxy paletteProxy;
+    NNSG2dImageProxy imageProxy;
 
-    NNS_G2dInitImagePaletteProxy(&v0);
-    NNS_G2dInitImageProxy(&v1);
+    NNS_G2dInitImagePaletteProxy(&paletteProxy);
+    NNS_G2dInitImageProxy(&imageProxy);
 
-    Graphics_LoadPartialPaletteFromOpenNARC(param1, 25, NNS_G2D_VRAM_TYPE_2DSUB, 0, 35, &v0);
-    Graphics_LoadImageMappingFromOpenNARC(param1, 24, 1, 0, 0, NNS_G2D_VRAM_TYPE_2DSUB, 0, 35, &v1);
+    Graphics_LoadPartialPaletteFromOpenNARC(narc, 25, NNS_G2D_VRAM_TYPE_2DSUB, 0, 35, &paletteProxy);
+    Graphics_LoadImageMappingFromOpenNARC(narc, 24, 1, 0, 0, NNS_G2D_VRAM_TYPE_2DSUB, 0, 35, &imageProxy);
 
-    ov20_021D4AF8(&(param0->unk_1C), param1, 22, 23);
+    ov20_021D4AF8(&(param0->unk_1C), narc, 22, 23);
 
-    param0->unk_14 = ov20_021D4B40(param0, &v1, &v0, &param0->unk_1C, 192, 56, 0, 0);
+    param0->unk_14 = ov20_021D4B40(param0, &imageProxy, &paletteProxy, &param0->unk_1C, 192, 56, 0, 0);
     Sprite_SetAnim(param0->unk_14, 0);
     Sprite_SetDrawFlag(param0->unk_14, FALSE);
 
-    param0->unk_18 = ov20_021D4B40(param0, &v1, &v0, &param0->unk_1C, 192, 136, 0, 0);
+    param0->unk_18 = ov20_021D4B40(param0, &imageProxy, &paletteProxy, &param0->unk_1C, 192, 136, 0, 0);
     Sprite_SetAnim(param0->unk_18, 2);
     Sprite_SetDrawFlag(param0->unk_18, FALSE);
 }
@@ -230,26 +226,23 @@ static void ov20_021D4AD4(UnkStruct_ov20_021D4AD4 *param0)
     ov20_021D4B2C(&param0->unk_1C);
 }
 
-static void ov20_021D4AF8(UnkStruct_ov20_021D4B2C *param0, NARC *param1, u32 param2, u32 param3)
+static void ov20_021D4AF8(UnkStruct_ov20_021D4B2C *param0, NARC *narc, u32 param2, u32 param3)
 {
-    param0->unk_00 = Graphics_GetCellBankFromOpenNARC(param1, param2, 1, &(param0->unk_04), HEAP_ID_35);
-    param0->unk_08 = Graphics_GetAnimBankFromOpenNARC(param1, param3, 1, &(param0->unk_0C), HEAP_ID_35);
+    param0->ncerBuffer = Graphics_GetCellBankFromOpenNARC(narc, param2, TRUE, &param0->unk_04, HEAP_ID_35);
+    param0->nanrBuffer = Graphics_GetAnimBankFromOpenNARC(narc, param3, TRUE, &param0->unk_0C, HEAP_ID_35);
 }
 
 static void ov20_021D4B2C(UnkStruct_ov20_021D4B2C *param0)
 {
-    Heap_Free(param0->unk_00);
-    Heap_Free(param0->unk_08);
+    Heap_Free(param0->ncerBuffer);
+    Heap_Free(param0->nanrBuffer);
 }
 
-static Sprite *ov20_021D4B40(UnkStruct_ov20_021D4AD4 *param0, NNSG2dImageProxy *param1, NNSG2dImagePaletteProxy *param2, UnkStruct_ov20_021D4B2C *param3, int param4, int param5, int param6, int param7)
+static Sprite *ov20_021D4B40(UnkStruct_ov20_021D4AD4 *param0, NNSG2dImageProxy *imageProxy, NNSG2dImagePaletteProxy *paletteProxy, UnkStruct_ov20_021D4B2C *param3, int param4, int param5, int param6, int param7)
 {
     SpriteResourcesHeader v0;
-    SpriteListTemplate v1;
-    Sprite *v2;
-
-    v0.imageProxy = param1;
-    v0.paletteProxy = param2;
+    v0.imageProxy = imageProxy;
+    v0.paletteProxy = paletteProxy;
     v0.cellBank = param3->unk_04;
     v0.cellAnimBank = param3->unk_0C;
     v0.priority = param6;
@@ -258,6 +251,7 @@ static Sprite *ov20_021D4B40(UnkStruct_ov20_021D4AD4 *param0, NNSG2dImageProxy *
     v0.multiCellAnimBank = NULL;
     v0.isVRamTransfer = 0;
 
+    SpriteListTemplate v1;
     v1.list = param0->unk_10;
     v1.resourceData = &v0;
     v1.position.x = param4 * FX32_ONE;
@@ -267,10 +261,10 @@ static Sprite *ov20_021D4B40(UnkStruct_ov20_021D4AD4 *param0, NNSG2dImageProxy *
     v1.vramType = NNS_G2D_VRAM_TYPE_2DSUB;
     v1.heapID = HEAP_ID_35;
 
-    v2 = SpriteList_Add(&v1);
+    Sprite *v2 = SpriteList_Add(&v1);
 
     if (v2) {
-        Sprite_SetAnimateFlag(v2, 1);
+        Sprite_SetAnimateFlag(v2, TRUE);
         Sprite_SetAnimSpeed(v2, ((FX32_ONE * 2) / 2));
     }
 
@@ -291,21 +285,21 @@ void ov20_021D4BA4(UnkStruct_ov20_021D4AD4 *param0)
             u16 unk_0A;
             u16 unk_0C;
         } v1[] = {
-            { 0x1, 0x3, 0x3, 0x3, 0x4, 0x3, 0xE },
-            { 0x5, 0x7, 0x3, 0xE, 0x0, 0x3, 0x3 }
+            [GROUP_MODE] = { 0x1, 0x3, 0x3, 0x3, 0x4, 0x3, 0xE },
+            [ABC_MODE] = { 0x5, 0x7, 0x3, 0xE, 0x0, 0x3, 0x3 }
         };
-        int v2 = EasyChat_GetMode(param0->unk_04);
+        int mode = EasyChat_GetMode(param0->app);
 
         v0->unk_00 = param0;
         v0->unk_04 = 0;
         v0->unk_08 = 0;
-        v0->unk_0A = v1[v2].unk_00;
-        v0->unk_0C = v1[v2].unk_02;
-        v0->unk_0E = v1[v2].unk_04;
-        v0->unk_10 = v1[v2].unk_06;
-        v0->unk_12 = v1[v2].unk_08;
-        v0->unk_14 = v1[v2].unk_0A;
-        v0->unk_16 = v1[v2].unk_0C;
+        v0->unk_0A = v1[mode].unk_00;
+        v0->unk_0C = v1[mode].unk_02;
+        v0->x1 = v1[mode].unk_04;
+        v0->y1 = v1[mode].unk_06;
+        v0->unk_12 = v1[mode].unk_08;
+        v0->x2 = v1[mode].unk_0A;
+        v0->y2 = v1[mode].unk_0C;
 
         param0->unk_4FC = SysTask_Start(ov20_021D4C40, v0, 1);
     } else {
@@ -324,17 +318,17 @@ static void ov20_021D4C40(SysTask *param0, void *param1)
 
     switch (v0->unk_04) {
     case 0:
-        Bg_CopyToTilemapRect(v0->unk_00->unk_0C, 4, v0->unk_0E, v0->unk_10, 11, 7, v0->unk_00->unk_2C[v0->unk_0A], 0, 0, 11, 7);
-        Bg_CopyToTilemapRect(v0->unk_00->unk_0C, 4, v0->unk_14, v0->unk_16, 11, 7, v0->unk_00->unk_2C[v0->unk_12], 0, 0, 11, 7);
-        Bg_CopyTilemapBufferToVRAM(v0->unk_00->unk_0C, 4);
+        Bg_CopyToTilemapRect(v0->unk_00->bgConfig, BG_LAYER_SUB_0, v0->x1, v0->y1, 11, 7, v0->unk_00->unk_2C[v0->unk_0A], 0, 0, 11, 7);
+        Bg_CopyToTilemapRect(v0->unk_00->bgConfig, BG_LAYER_SUB_0, v0->x2, v0->y2, 11, 7, v0->unk_00->unk_2C[v0->unk_12], 0, 0, 11, 7);
+        Bg_CopyTilemapBufferToVRAM(v0->unk_00->bgConfig, BG_LAYER_SUB_0);
 
         v0->unk_0A++;
         v0->unk_04++;
         break;
     case 1:
         if (++(v0->unk_08) >= 2) {
-            Bg_CopyToTilemapRect(v0->unk_00->unk_0C, 4, v0->unk_0E, v0->unk_10, 11, 7, v0->unk_00->unk_2C[v0->unk_0A], 0, 0, 11, 7);
-            Bg_CopyTilemapBufferToVRAM(v0->unk_00->unk_0C, 4);
+            Bg_CopyToTilemapRect(v0->unk_00->bgConfig, BG_LAYER_SUB_0, v0->x1, v0->y1, 11, 7, v0->unk_00->unk_2C[v0->unk_0A], 0, 0, 11, 7);
+            Bg_CopyTilemapBufferToVRAM(v0->unk_00->bgConfig, BG_LAYER_SUB_0);
 
             v0->unk_08 = 0;
             v0->unk_0A++;
@@ -343,8 +337,8 @@ static void ov20_021D4C40(SysTask *param0, void *param1)
         break;
     case 2:
         if (++(v0->unk_08) >= 4) {
-            Bg_CopyToTilemapRect(v0->unk_00->unk_0C, 4, v0->unk_0E, v0->unk_10, 11, 7, v0->unk_00->unk_2C[v0->unk_0A], 0, 0, 11, 7);
-            Bg_CopyTilemapBufferToVRAM(v0->unk_00->unk_0C, 4);
+            Bg_CopyToTilemapRect(v0->unk_00->bgConfig, BG_LAYER_SUB_0, v0->x1, v0->y1, 11, 7, v0->unk_00->unk_2C[v0->unk_0A], 0, 0, 11, 7);
+            Bg_CopyTilemapBufferToVRAM(v0->unk_00->bgConfig, BG_LAYER_SUB_0);
             v0->unk_04++;
         }
         break;
@@ -355,11 +349,11 @@ static void ov20_021D4C40(SysTask *param0, void *param1)
     }
 }
 
-void ov20_021D4DBC(UnkStruct_ov20_021D4AD4 *param0, BOOL param1)
+void ov20_021D4DBC(UnkStruct_ov20_021D4AD4 *param0, BOOL draw)
 {
-    if (param1) {
-        Sprite_SetDrawFlag(param0->unk_14, ov20_021D204C(param0->unk_04));
-        Sprite_SetDrawFlag(param0->unk_18, ov20_021D2060(param0->unk_04));
+    if (draw) {
+        Sprite_SetDrawFlag(param0->unk_14, EasyChat_CanScrollWordPickerUp(param0->app));
+        Sprite_SetDrawFlag(param0->unk_18, EasyChat_CanScrollWordPickerDown(param0->app));
     } else {
         Sprite_SetDrawFlag(param0->unk_14, FALSE);
         Sprite_SetDrawFlag(param0->unk_18, FALSE);

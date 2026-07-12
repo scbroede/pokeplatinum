@@ -21,20 +21,20 @@ typedef struct {
     u8 unk_01;
 } UnkStruct_ov20_021D1F34;
 
-typedef struct {
-    u16 unk_00;
-    u16 unk_02;
-    u16 unk_04;
-    u8 unk_06;
-    u8 unk_07;
-    int unk_08;
-} UnkStruct_ov20_021D18BC;
+typedef struct EasyChatWordPicker {
+    u16 listPos;
+    u16 maxListPos;
+    u16 wordCount;
+    u8 cursorXPos;
+    u8 cursorYPos;
+    int listPosDelta;
+} EasyChatWordPicker;
 
-typedef struct {
-    s16 unk_00;
-    s8 unk_02;
-    s8 unk_03;
-} UnkStruct_ov20_021D0F64;
+typedef struct EasyChatSentencePicker {
+    s16 type;
+    s8 id;
+    s8 idsOfCurrentType;
+} EasyChatSentencePicker;
 
 typedef struct EasyChatApp {
     EasyChatArgs *args;
@@ -42,7 +42,7 @@ typedef struct EasyChatApp {
     EasyChatSentence sentence;
     u16 words[MAX_EASY_CHAT_WORDS];
     UnkStruct_ov20_021D2128 *unk_14;
-    EasyChatWordList *unk_18;
+    EasyChatWordList *wordList;
     int state;
     EasyChatMainFunc mainFunc;
     EasyChatMainFunc nextMainFunc;
@@ -52,16 +52,16 @@ typedef struct EasyChatApp {
     u16 heldKeysUnused;
     u16 pressedKeysRepeatable;
     int touchedButtonIndex;
-    int unk_3C;
+    u8 padding[4];
     TouchScreenActions *buttonAction;
-    BOOL unk_44;
-    BOOL unk_48;
-    u16 unk_4C;
+    int dummy;
+    int dummy2;
+    u16 confirmOrCancelCursorPos;
     u16 currentWordSlot;
     u16 categoryCursorPos;
     u16 prevCategoryCursorPos;
-    UnkStruct_ov20_021D18BC unk_54;
-    UnkStruct_ov20_021D0F64 unk_60;
+    EasyChatWordPicker wordPicker;
+    EasyChatSentencePicker sentencePicker;
     u8 unk_64;
     u8 mode;
     UnkStruct_ov20_021D1F34 unk_66;
@@ -73,18 +73,18 @@ BOOL EasyChat_Exit(ApplicationManager *appMan, int *state);
 u32 EasyChat_GetType(const EasyChatApp *easyChatApp);
 u32 EasyChat_GetInstructionBankEntry(const EasyChatApp *easyChatApp);
 u32 EasyChat_GetMode(const EasyChatApp *easyChatApp);
-u32 ov20_021D1F9C(const EasyChatApp *easyChatApp);
-u16 EasyChat_GetWordAtSlot(const EasyChatApp *easyChatApp, int param1);
-String *ov20_021D1FC0(const EasyChatApp *easyChatApp, u32 param1);
+u32 EasyChat_GetSentenceType(const EasyChatApp *easyChatApp);
+u16 EasyChat_GetWordAtSlot(const EasyChatApp *easyChatApp, int slot);
+String *EasyChat_GetSentenceTemplateString(const EasyChatApp *easyChatApp, enum HeapID heapID);
 u32 EasyChat_GetCurrentWordSlot(const EasyChatApp *easyChatApp);
 u32 ov20_021D1FD4(const EasyChatApp *easyChatApp);
 u32 EasyChat_GetCategoryCursorPos(const EasyChatApp *easyChatApp);
-u32 ov20_021D1FE4(const EasyChatApp *easyChatApp);
-void ov20_021D2008(const EasyChatApp *easyChatApp, u32 param1, String *param2);
-u32 ov20_021D2034(const EasyChatApp *easyChatApp);
-int ov20_021D2040(const EasyChatApp *easyChatApp);
-BOOL ov20_021D204C(const EasyChatApp *easyChatApp);
-BOOL ov20_021D2060(const EasyChatApp *easyChatApp);
+u32 EasyChat_GetCurrentCategoryWordCount(const EasyChatApp *easyChatApp);
+void EasyChat_GetWordStringAtIndex(const EasyChatApp *easyChatApp, u32 index, String *out);
+u32 EasyChat_GetWordPickerCursorPos(const EasyChatApp *easyChatApp);
+int EasyChat_GetWordPickerScrollDistance(const EasyChatApp *easyChatApp);
+BOOL EasyChat_CanScrollWordPickerUp(const EasyChatApp *easyChatApp);
+BOOL EasyChat_CanScrollWordPickerDown(const EasyChatApp *easyChatApp);
 int EasyChat_GetFrame(const EasyChatApp *easyChatApp);
 u32 ov20_021D208C(const EasyChatApp *easyChatApp);
 
